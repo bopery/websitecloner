@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+import os
+import sys
+import shutil
+import subprocess
+
+def print_usage():
+    print("Usage: python webclone.py <website_url> [depth]")
+    print("  <website_url>: The full URL (including http/https) of the website to clone.")
+    print("  [depth]: (Optional) How deep to clone (default: 2).")
+    print("\nExample:")
+    print("  python webclone.py https://example.com 2")
+
+def check_wget():
+    if shutil.which("wget") is None:
+        print("Error: wget is not installed. Please install wget and try again.")
+        sys.exit(1)
+
+def main():
+    if len(sys.argv) < 2:
+        print_usage()
+        sys.exit(1)
+    url = sys.argv[1]
+    depth = sys.argv[2] if len(sys.argv) > 2 else "2"
+
+    check_wget()
+
+    domain = url.split("//")[-1].split("/")[0]
+    output_folder = domain
+
+    if os.path.isdir(output_folder):
+        print(f"Warning: Output folder '{output_folder}' already exists. Files may be overwritten.")
+
+    print(f"Cloning: {url}")
+    print(f"Saving files to: {output_folder}/")
+    print(f"Depth: {depth}")
+
+    cmd = [
+        "wget",
+        "--recursive",
+        "--no-clobber",
+        "--page-requisites",
+        "--html-extension",
+        "--convert-links",
+        "--restrict-file-names=windows",
+        "--domains", domain,
+        "--no-parent",
+        "--level", depth,
+        "--directory-prefix", output_folder,
+        url
+    ]
+    try:
+        subprocess.run(cmd, check=True)
+        print(f"Cloning complete! See the '{output_folder}' folder.")
+    except subprocess.CalledProcessError:
+        print("Error: wget failed to clone the website.")
+
+if __name__ == "__main__":
+    main()
